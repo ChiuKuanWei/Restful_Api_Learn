@@ -2,12 +2,15 @@
 using API_TEST.GetData_Parameter;
 using API_TEST.Models;
 using AutoMapper;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Collections;
+using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Transactions;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,6 +26,7 @@ namespace API_TEST.Controllers
     [ApiController]
     public class HelloWorldController : ControllerBase
     {
+        private readonly string SqlConn = @"Server=localhost\SQLEXPRESS;Database=CreativeTEMP_DB;Trusted_Connection=True;User ID=sa;Password=54013657";
         //readonly 在建構子指派值之後，就不能更改
         private readonly CreativeTEMP_DBContext _CreativeTEMP_DBContext;
         private readonly IMapper _IMapper;
@@ -38,11 +42,11 @@ namespace API_TEST.Controllers
         //取得資源
         //取得資料表總攬
         //ActionResult為指定回傳型別
-        //[HttpGet]
-        //public ActionResult<IEnumerable<RgFreezer>> GetData()
-        //{
-        //    return _CreativeTEMP_DBContext.RgFreezers;  //回傳總攬
-        //}
+        [HttpGet]
+        public ActionResult<IEnumerable<RgFreezer>> GetData()
+        {
+            return _CreativeTEMP_DBContext.RgFreezers.ToList();  //回傳總攬
+        }
 
         // GET: api/<HelloWorldController>
         //取得指定資源
@@ -75,47 +79,47 @@ namespace API_TEST.Controllers
         // GET: api/<HelloWorldController>?FreezerName=檢體儲存室&DateTime=2018-01-19
         //取得指定資源
         //FromQuery =>是從網址上的變數取得而來
-        [HttpGet]
-        public IEnumerable<FreezerSelectDTO> Get_Select_Data([FromQuery] Get_Select_Data_Parameter value)
-        {
-            //DTO 修改成給使用者觀看的資訊-------------------------------------------------------
-            var result = (from a in _CreativeTEMP_DBContext.RgFreezers
-                          join b in _CreativeTEMP_DBContext.Groups on a.FreezerId equals b.Id
-                          select new FreezerSelectDTO
-                          {
-                              FreezerId = a.FreezerId,
-                              FloorId = a.FloorId,
-                              FreezerName = a.FreezerName,
-                              FreezerDesc = a.FreezerDesc,
-                              CreativeDatetime = a.CreativeDatetime,
-                              FREEZER_TOKEN = b.FreezerToken,
-                              //rgManagerDataDTOs = (from c in _CreativeTEMP_DBContext.RgManagerData
-                              //                     where a.FreezerId == c.Id
-                              //                     select new RgManagerDataDTO
-                              //                     {
-                              //                         Id = c.Id,
-                              //                         LaboratoryUse = c.LaboratoryUse,
-                              //                         ManagerName = c.ManagerName,
-                              //                         ManagerNum = c.ManagerNum
-                              //                     }).ToList()
+        //[HttpGet]
+        //public IEnumerable<FreezerSelectDTO> Get_Select_Data([FromQuery] Get_Select_Data_Parameter value)
+        //{
+        //    //DTO 修改成給使用者觀看的資訊-------------------------------------------------------
+        //    var result = (from a in _CreativeTEMP_DBContext.RgFreezers
+        //                  join b in _CreativeTEMP_DBContext.Groups on a.FreezerId equals b.Id
+        //                  select new FreezerSelectDTO
+        //                  {
+        //                      FreezerId = a.FreezerId,
+        //                      FloorId = a.FloorId,
+        //                      FreezerName = a.FreezerName,
+        //                      FreezerDesc = a.FreezerDesc,
+        //                      CreativeDatetime = a.CreativeDatetime,
+        //                      FREEZER_TOKEN = b.FreezerToken,
+        //                      //rgManagerDataDTOs = (from c in _CreativeTEMP_DBContext.RgManagerData
+        //                      //                     where a.FreezerId == c.Id
+        //                      //                     select new RgManagerDataDTO
+        //                      //                     {
+        //                      //                         Id = c.Id,
+        //                      //                         LaboratoryUse = c.LaboratoryUse,
+        //                      //                         ManagerName = c.ManagerName,
+        //                      //                         ManagerNum = c.ManagerNum
+        //                      //                     }).ToList()
 
-                          });
+        //                  });
 
-            if (!string.IsNullOrEmpty(value.FreezerName))
-            {
-                result = result.Where(a => a.FreezerName == value.FreezerName);
-            }
-            if (value.DateTime != null)
-            {
-                result = result.Where(a => a.CreativeDatetime.Date == value.DateTime);
-            }
-            if(value.MinNumber != null && value.MaxNumber != null)
-            {
-                result = result.Where(a => a.FloorId >= value.MinNumber && a.FloorId <= value.MaxNumber);
-            }
+        //    if (!string.IsNullOrEmpty(value.FreezerName))
+        //    {
+        //        result = result.Where(a => a.FreezerName == value.FreezerName);
+        //    }
+        //    if (value.DateTime != null)
+        //    {
+        //        result = result.Where(a => a.CreativeDatetime.Date == value.DateTime);
+        //    }
+        //    if (value.MinNumber != null && value.MaxNumber != null)
+        //    {
+        //        result = result.Where(a => a.FloorId >= value.MinNumber && a.FloorId <= value.MaxNumber);
+        //    }
 
-            return result;
-        }
+        //    return result.ToList();  //ToList() ==> 將列舉轉換為列表
+        //}
 
         //GET: api/<HelloWorldController>
         //利用AutoMapper改寫應給使用者觀看的欄位資料
@@ -169,6 +173,51 @@ namespace API_TEST.Controllers
             //{
             //    return BadRequest(ex.Message);
             //}
+        }
+
+        // Post api/<HelloWorldController>/a3
+        //新增100000筆資料
+        [HttpPost("a3")]
+        public ActionResult AddData()
+        {
+            var sqlCommand = @"INSERT INTO [CreativeTEMP_DB].[dbo].[RG_FREEZER]([FLOOR_ID],[FREEZER_NAME],[FREEZER_DESC],[CREATIVE_USER_ID]
+                               ,[CREATIVE_DATETIME],[NOTE])
+                               VALUES(@FloorId,@FreezerName,@FreezerDesc,@CreativeUserId,@CreativeDatetime,@Note)";
+            var _RgFreezer = new List<RgFreezer>();
+            for (int i = 0; i < 100000; i++)
+            {
+                _RgFreezer.Add(new RgFreezer()
+                {
+                    FloorId = 2,
+                    FreezerName = "測試台" + (i + 1),
+                    FreezerDesc = "壓力測試" + (i + 1),
+                    CreativeUserId = 1,
+                    CreativeDatetime = DateTime.Parse(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
+                    Note = "測試啦" + (i + 1)
+                });
+                
+            }
+
+            try
+            {
+                //利用 Dapper+TransactionScope 加快多筆資料新增速度
+                using (var scoope = new TransactionScope())
+                {
+                    using (var conn = new SqlConnection(SqlConn))
+                    {
+                        conn.Open();
+                        var Result = conn.Execute(sqlCommand, _RgFreezer);
+                        conn.Close();
+                    }
+                    scoope.Complete();
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+                    
+            return Ok("新增完成!!");
         }
 
         //GET: api/<HelloWorldController>/From/TEST1?id2=TEST2

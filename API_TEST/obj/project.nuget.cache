@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "gkgLsFMiaVUvExXV/TLSYursKKv6f/FAKKdhDigA1FN7yX/WBwyAwu2Kjzjnvsrm+n+xmcAbMUJN3xRmxqnMEw==",
+  "dgSpecHash": "Wuk4SH2QkVPBhd0YtviOnGmoUQEGotJVNPvQQkMb/9cMu+tlKc+hiwcY0FjqGHByYcNjlLVZ8MHqg9siqShMeg==",
   "success": true,
   "projectFilePath": "C:\\Users\\harry\\OneDrive\\桌面\\建立WebAPI\\API_TEST\\API_TEST\\API_TEST.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\harry\\.nuget\\packages\\automapper\\11.0.1\\automapper.11.0.1.nupkg.sha512",
     "C:\\Users\\harry\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\11.0.0\\automapper.extensions.microsoft.dependencyinjection.11.0.0.nupkg.sha512",
+    "C:\\Users\\harry\\.nuget\\packages\\dapper\\2.0.123\\dapper.2.0.123.nupkg.sha512",
     "C:\\Users\\harry\\.nuget\\packages\\humanizer.core\\2.8.26\\humanizer.core.2.8.26.nupkg.sha512",
     "C:\\Users\\harry\\.nuget\\packages\\microsoft.aspnet.webapi.client\\5.2.9\\microsoft.aspnet.webapi.client.5.2.9.nupkg.sha512",
     "C:\\Users\\harry\\.nuget\\packages\\microsoft.aspnet.webapi.core\\5.2.9\\microsoft.aspnet.webapi.core.5.2.9.nupkg.sha512",
