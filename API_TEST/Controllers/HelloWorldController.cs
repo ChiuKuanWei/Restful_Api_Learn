@@ -43,9 +43,14 @@ namespace API_TEST.Controllers
         //取得資料表總攬
         //ActionResult為指定回傳型別
         [HttpGet]
-        public ActionResult<IEnumerable<RgFreezer>> GetData()
+        public IEnumerable<RG_FREEZER> GetData()
         {
-            return _CreativeTEMP_DBContext.RgFreezers.ToList();  //回傳總攬
+            using (var conn = new SqlConnection(SqlConn))
+            {
+                var result = conn.Query<RG_FREEZER>("SELECT * FROM [CreativeTEMP_DB].[dbo].[RG_FREEZER]").ToList();
+                return result;
+            }
+            //return _CreativeTEMP_DBContext.RgFreezers.ToList();  //回傳總攬
         }
 
         // GET: api/<HelloWorldController>
@@ -64,11 +69,10 @@ namespace API_TEST.Controllers
         //                      FreezerDesc = a.FreezerDesc,
         //                      CreativeDatetime = a.CreativeDatetime,
         //                      FREEZER_TOKEN = b.FreezerToken
-
         //                  });
 
         //    //var result1 = from a in _CreativeTEMP_DBContext.RgFreezers
-        //    //              //where a.FloorId == 9
+        //    //              where a.FloorId == 9
         //    //              select a;
 
         //    //var result2 = _CreativeTEMP_DBContext.RgFreezers.Where(e => e.FloorId == 9);
@@ -183,10 +187,11 @@ namespace API_TEST.Controllers
             var sqlCommand = @"INSERT INTO [CreativeTEMP_DB].[dbo].[RG_FREEZER]([FLOOR_ID],[FREEZER_NAME],[FREEZER_DESC],[CREATIVE_USER_ID]
                                ,[CREATIVE_DATETIME],[NOTE])
                                VALUES(@FloorId,@FreezerName,@FreezerDesc,@CreativeUserId,@CreativeDatetime,@Note)";
-            var _RgFreezer = new List<RgFreezer>();
+            
+            var _RgFreezer = new List<RgFreezer>();  //http://mermerism.blogspot.com/2014/04/c-list.html
             for (int i = 0; i < 100000; i++)
             {
-                _RgFreezer.Add(new RgFreezer()
+                _RgFreezer.Add(new RgFreezer()                
                 {
                     FloorId = 2,
                     FreezerName = "測試台" + (i + 1),
@@ -200,7 +205,7 @@ namespace API_TEST.Controllers
 
             try
             {
-                //利用 Dapper+TransactionScope 加快多筆資料新增速度
+                //利用 Dapper+TransactionScope Wrapper的方式 加快多筆資料新增速度
                 using (var scoope = new TransactionScope())
                 {
                     using (var conn = new SqlConnection(SqlConn))
